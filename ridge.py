@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import linear_model
 from IPython import embed
+import os
 
 paths = ['data/train.csv', 'data/test.csv']
 t = p.read_csv(paths[0])
@@ -23,7 +24,16 @@ test_prediction = clf.predict(test)
 print 'Best Alpha:', clf.alpha_
 print 'Train error: {0}'.format(np.sqrt(np.sum(np.array(np.array(clf.predict(X))-y)**2)/ (X.shape[0]*24.0)))
 
-prediction = np.array(np.hstack([np.matrix(t2['id']).T, test_prediction])) 
+prediction = np.array(np.hstack([np.matrix(t2['id']).T, test_prediction]))
 col = '%i,' + '%f,'*23 + '%f'
-np.savetxt('results/ridge.csv', prediction, col, delimiter=',')
+header = ','.join(['id'] + list(t.columns[4:])) + '\n'
+
+outfile = 'results/ridge.csv'
+
+if os.path.exists(outfile):
+    os.remove(outfile)
+
+with open(outfile, 'w') as f:
+    f.write(header)
+    np.savetxt(f, prediction, col, delimiter=',')
 embed()
