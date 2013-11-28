@@ -1,10 +1,9 @@
-from load import *
-from clean import *
-from model import *
+import load, clean, model
+import numpy as np
 import os
 
-test_set = load_test()
-train_set = load_train()
+test_set = load.load_test()
+train_set = load.load_train()
 
 
 def output(filename, predictions):
@@ -22,13 +21,13 @@ def output(filename, predictions):
 
 def ridge_001():
     print('*** CLEANING ***')
-    tfidf = get_tfidf_vectorizer(train_set['tweet'])
+    tfidf = clean.get_tfidf_vectorizer(train_set['tweet'])
     X_train = tfidf.transform(train_set['tweet'])
     X_test = tfidf.transform(test_set['tweet'])
     y_train = np.array(train_set.ix[:, 4:])
 
     print('*** TRAINING ***')
-    mdl = ridge(X_train, y_train)
+    mdl = model.ridge(X_train, y_train)
     print('*** PREDICTING ***')
     test_prediction = mdl.predict(X_test)
     print('*** OUTPUTTING ***')
@@ -37,7 +36,7 @@ def ridge_001():
 
 def ridge_002():
     print('*** CLEANING ***')
-    tfidf = get_tfidf_vectorizer(train_set['tweet'])
+    tfidf = clean.get_tfidf_vectorizer(train_set['tweet'])
     X_train = tfidf.transform(train_set['tweet'])
     X_test = tfidf.transform(test_set['tweet'])
 
@@ -52,7 +51,7 @@ def ridge_002():
     for cols in col_sets:
         y = np.array(train_set[cols])
         print('*** TRAINING ***')
-        mdl = ridge(X_train, y)
+        mdl = model.ridge(X_train, y)
         print('*** PREDICTING ***')
         pred = mdl.predict(X_test)
         predictions.append(pred)
@@ -67,8 +66,8 @@ def ridge_002():
     time_preds = predictions[1]
     keyword_preds = predictions[2]
 
-    sentiment_preds = normalize_sum_to_one(sentiment_preds)
-    time_preds = normalize_sum_to_one(time_preds)
+    sentiment_preds = clean.normalize_sum_to_one(sentiment_preds)
+    time_preds = clean.normalize_sum_to_one(time_preds)
 
     all_predictions = np.hstack([sentiment_preds, time_preds, keyword_preds])
     print('*** OUTPUTTING ***')
