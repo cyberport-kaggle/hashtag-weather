@@ -22,15 +22,15 @@ y = np.array(t.ix[:,4:])
 
 test_prediction = np.zeros(shape = (test.shape[0], y.shape[1]))
 
-lsa = TruncatedSVD(n_components = 100)
+lsa = TruncatedSVD(n_components = 500)
 lsa.fit(X)
 X = lsa.transform(X)
 test = lsa.transform(test)
 print X.shape, test.shape
 
-np.savetxt('lsa_train_x.csv', X, delimiter=',')
-np.savetxt('lsa_train_y.csv', y, delimiter=',')
-np.savetxt('lsa_test_x.csv', test, delimiter=',')
+np.savetxt('data/lsa_train_x.csv', X, delimiter=',')
+np.savetxt('data/lsa_train_y.csv', y, delimiter=',')
+np.savetxt('data/lsa_test_x.csv', test, delimiter=',')
 
 embed()
 
