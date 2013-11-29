@@ -1,9 +1,12 @@
 import load, clean, model
 import numpy as np
 import os
+from IPython import embed
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 test_set = load.load_test()
 train_set = load.load_train()
+
 
 
 def output(filename, predictions):
@@ -25,7 +28,7 @@ def ridge_001():
     X_train = tfidf.transform(train_set['tweet'])
     X_test = tfidf.transform(test_set['tweet'])
     y_train = np.array(train_set.ix[:, 4:])
-
+    embed()
     print('*** TRAINING ***')
     mdl = model.ridge(X_train, y_train)
     print('*** PREDICTING ***')
@@ -72,3 +75,35 @@ def ridge_002():
     all_predictions = np.hstack([sentiment_preds, time_preds, keyword_preds])
     print('*** OUTPUTTING ***')
     output('results/ridge_002.csv', all_predictions)
+
+
+def ridge_003():
+    print('*** CLEANING ***')
+    tfidf_wrd = TfidfVectorizer(max_features=10000, strip_accents='unicode', analyzer='word', ngram_range=(1, 3),
+                                lowercase=True, stop_words='english', min_df=3, max_df=0.5)
+    tfidf_wrd.fit(train_set['tweet'])
+    X_train_wrd = tfidf_wrd.transform(train_set['tweet'])
+    X_test_wrd = tfidf_wrd.transform(test_set['tweet'])
+
+    tfidf_char = TfidfVectorizer(max_features=10000, strip_accents='unicode', analyzer='char', ngram_range=(4, 10),
+                                lowercase=True, stop_words='english', min_df=3, max_df=0.5)
+    tfidf_char.fit(train_set['tweet'])
+    X_train_char = tfidf_char.transform(train_set['tweet'])
+    X_test_char = tfidf_char.transform(test_set['tweet'])
+
+    y_train = np.array(train_set.ix[:, 4:])
+
+    print('*** TRAINING ***')
+    mdl_wrd = model.ridge(X_train_wrd, y_train)
+    mdl_char = model.ridge(X_train_char, y_train)
+
+    print('*** PREDICTING ***')
+    test_prediction_wrd = mdl_wrd.predict(X_test_wrd)
+    test_prediction_char = mdl_char.predict(X_test_char)
+
+    test_prediction = (test_prediction_wrd + test_prediction_char) / 2
+
+    print('*** OUTPUTTING ***')
+    output('results/ridge_003.csv', test_prediction)
+
+ridge_003()

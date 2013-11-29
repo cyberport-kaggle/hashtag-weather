@@ -4,6 +4,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import linear_model
 from IPython import embed
 import os
+import clean
+
+def y_tran(y):
+    return np.log(y / (1-y))
+
+def y_tran_inv(a):
+    return 1 / (1 + np.exp(-a))
 
 paths = ['data/train.csv', 'data/test.csv']
 train_set = p.read_csv(paths[0])
@@ -15,6 +22,12 @@ tfidf.fit(train_set['tweet'])
 X = tfidf.transform(train_set['tweet'])
 Xp = tfidf.transform(test_set['tweet'])
 y = np.array(train_set.ix[:,4:])
+
+# Perturb 0 and 1 with small numbers
+y[y == 0] = 1e-6
+y[y == 1] = 1 - 1e-6
+
+y = y_tran(y)
 
 def output(filename, predictions):
     prediction = np.array(np.hstack([np.matrix(test_set['id']).T, predictions]))
@@ -29,10 +42,22 @@ def output(filename, predictions):
         np.savetxt(f, prediction, col, delimiter=',')
 
 # One shot ridge regression
-clf = linear_model.RidgeCV(alphas = np.linspace(0, 5, 10), cv = 5, normalize = True)
 # clf = linear_model.Ridge(alpha = 0.5)
+clf = linear_model.RidgeCV(alphas = np.linspace(3, 4, 3), cv = 5, normalize = True)
 clf.fit(X, y)
 test_prediction = clf.predict(Xp)
+test_prediction = y_tran_inv(test_prediction)
+
+s = test_prediction[:, 0:5]
+s = clean.normalize_sum_to_one(s)
+t = test_prediction[:, 5:9]
+t = clean.normalize_sum_to_one(t)
+k = test_prediction[:, 9:24]
+
+test_prediction = np.hstack((s, t, k))
+
+print 'One shot regression done'
+
 print 'Best Alpha:', clf.alpha_
 print 'Train error: {0}'.format(np.sqrt(np.sum(np.array(np.array(clf.predict(X))-y)**2)/ (X.shape[0]*24.0)))
 output('results/ridge.csv', test_prediction)
@@ -72,6 +97,5 @@ sentiment_preds = sentiment_preds / np.tile(rowsums, (1, 5))
 rowsums = time_preds.sum(1).reshape(-1, 1)
 time_preds = time_preds / np.tile(rowsums, (1, 4))
 
-txt(f, prediction, col, delimiter=',')
 all_predictions = np.hstack([sentiment_preds, time_preds, keyword_preds])
 output('results/split_ridge.csv', all_predictions)

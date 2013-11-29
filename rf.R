@@ -2,9 +2,9 @@ library(randomForest)
 library(doMC)
 registerDoMC(4)
 
-trainX <- read.table("data/lsa_train_x.csv", header=FALSE, sep=',', nrows=80000, colClasses='numeric')
-trainY <- read.table("data/lsa_train_y.csv", header=FALSE, sep=',', nrows=80000, colClasses='numeric')
-testX <- read.table("data/lsa_test_x.csv", header=FALSE, sep=',', nrows=50000, colClasses='numeric')
+# trainX <- read.table("data/lsa_train_x.csv", header=FALSE, sep=',', nrows=80000, colClasses='numeric')
+# trainY <- read.table("data/lsa_train_y.csv", header=FALSE, sep=',', nrows=80000, colClasses='numeric')
+# testX <- read.table("data/lsa_test_x.csv", header=FALSE, sep=',', nrows=50000, colClasses='numeric')
 
 id <- read.csv("data/sampleSubmission.csv", colClasses=c("numeric", rep(NULL, 24)))[,1]
 
@@ -25,4 +25,8 @@ cnames <- c("id",
             paste0(rep("k", 15), 1:15))
 res <- cbind(id, res)
 colnames(res) <- cnames
+
+res[,2:6] <- res[,2:6] / rowSums(res[,2:6])
+res[,7:10] <- res[,7:10] / rowSums(res[,7:10])
+
 write.csv(res, "results/rf.csv", col.names = TRUE, row.names = FALSE)
