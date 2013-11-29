@@ -9,10 +9,13 @@ def rmse(model, data, actuals):
 def cv(model, data, actuals, folds=5):
     kf = cross_validation.KFold(data.shape[0], n_folds=folds, indices=True)
     errors = []
+    cnt = 1
     for train, test in kf:
+        print "Fold {} of {}".format(cnt, folds)
         X_train, X_test, y_train, y_test = data[train], data[test], actuals[train], actuals[test]
         model.fit(X_train, y_train)
         errors.append(rmse(model, X_test, y_test))
+        cnt += 1
     return errors
 
 

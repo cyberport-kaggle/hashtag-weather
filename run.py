@@ -1,5 +1,6 @@
 import load, clean, model
 import numpy as np
+import sklearn
 import os
 from IPython import embed
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -21,15 +22,28 @@ def output(filename, predictions):
         np.savetxt(f, prediction, col, delimiter=',')
 
 
-def ridge_001():
+def ridge_001(column_errs=False):
     print('*** CLEANING ***')
     tfidf = clean.get_tfidf_vectorizer(train_set['tweet'])
     X_train = tfidf.transform(train_set['tweet'])
     X_test = tfidf.transform(test_set['tweet'])
     y_train = np.array(train_set.ix[:, 4:])
-    embed()
     print('*** TRAINING ***')
     mdl = model.ridge(X_train, y_train)
+    final_mdl = sklearn.linear_model.Ridge(alpha=mdl.alpha_, normalize=True)
+    cv_error = model.cv(final_mdl, X_train, y_train)
+    print "CV Errors: {}, Mean: {}".format(cv_error, sum(cv_error) / len(cv_error))
+
+    if column_errs:
+        columns = list(train_set.columns[4:])
+        final_mdl.fit(X_train, y_train)
+        predictions = final_mdl.predict(X_train)
+        rmses = []
+        for i, col in enumerate(columns):
+            err = np.sqrt(np.sum(np.array(predictions[:, i] - y_train[:, i]) ** 2) / (X_train.shape[0]))
+            print "Column {} RMSE: {}".format(col, err)
+            rmses.append(err)
+
     print('*** PREDICTING ***')
     test_prediction = mdl.predict(X_test)
     print('*** OUTPUTTING ***')
@@ -105,4 +119,40 @@ def ridge_003():
     print('*** OUTPUTTING ***')
     output('results/ridge_003.csv', test_prediction)
 
-ridge_003()
+
+def ridge_004(column_errs=False):
+    # Some more rigorous cleaning
+    print('*** CLEANING ***')
+
+    for i in range(train_set['tweet'].shape[0]):
+        train_set['tweet'][i] = clean.clean_string(train_set['tweet'][i])
+
+    for i in range(test_set['tweet'].shape[0]):
+        test_set['tweet'][i] = clean.clean_string(test_set['tweet'][i])
+
+    # The cleaning and stemming takes it down to ~7000 features, from the previously more than 10k
+    tfidf = clean.get_tfidf_vectorizer(train_set['tweet'])
+
+    X_train = tfidf.transform(train_set['tweet'])
+    X_test = tfidf.transform(test_set['tweet'])
+    y_train = np.array(train_set.ix[:, 4:])
+    print('*** TRAINING ***')
+    mdl = model.ridge(X_train, y_train)
+    final_mdl = sklearn.linear_model.Ridge(alpha=mdl.alpha_, normalize=True)
+    cv_error = model.cv(final_mdl, X_train, y_train)
+    print "CV Errors: {}, Mean: {}".format(cv_error, sum(cv_error) / len(cv_error))
+
+    if column_errs:
+        columns = list(train_set.columns[4:])
+        final_mdl.fit(X_train, y_train)
+        predictions = final_mdl.predict(X_train)
+        rmses = []
+        for i, col in enumerate(columns):
+            err = np.sqrt(np.sum(np.array(predictions[:, i] - y_train[:, i]) ** 2) / (X_train.shape[0]))
+            print "Column {} RMSE: {}".format(col, err)
+            rmses.append(err)
+
+    print('*** PREDICTING ***')
+    test_prediction = mdl.predict(X_test)
+    print('*** OUTPUTTING ***')
+    output('results/ridge_004.csv', test_prediction)
