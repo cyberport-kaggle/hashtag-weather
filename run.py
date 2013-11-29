@@ -8,7 +8,6 @@ test_set = load.load_test()
 train_set = load.load_train()
 
 
-
 def output(filename, predictions):
     prediction = np.array(np.hstack([np.matrix(test_set['id']).T, predictions]))
     col = '%i,' + '%f,'*23 + '%f'
