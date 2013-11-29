@@ -154,5 +154,10 @@ def ridge_004(column_errs=False):
 
     print('*** PREDICTING ***')
     test_prediction = mdl.predict(X_test)
+
+    test_prediction = clean.remove_negatives(test_prediction)
+    test_prediction[:, 0:5] = clean.normalize_sum_to_one(test_prediction[:, 0:5])
+    test_prediction[:, 5:9] = clean.normalize_sum_to_one(test_prediction[:, 5:9])
+
     print('*** OUTPUTTING ***')
     output('results/ridge_004.csv', test_prediction)

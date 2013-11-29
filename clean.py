@@ -39,6 +39,11 @@ def normalize_sum_to_one(data):
     return new_data
 
 
+def remove_negatives(data):
+    data[data < 0] = 0
+    return data
+
+
 def clean_string(string):
     new_string = string.lower()  # Also done by the vectorizer, but do it here anyway
     # remove RT
